@@ -16,6 +16,7 @@ import com.google.gson.JsonParser;
 import com.vng.zalo.sdk.APIException;
 
 public class ResponseUtils {
+
     public static <T extends Object> T getData(String json, Class<T> classOfT) throws APIException {
         JsonParser p = new JsonParser();
         JsonElement parsed = p.parse(json);

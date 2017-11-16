@@ -12,9 +12,9 @@ import com.google.gson.JsonObject;
  * @author nghiadc
  */
 public class OpenCallAction extends MsgAction {
+
     protected String phoneCode;
 
-   
     public String getPhoneCode() {
         return phoneCode;
     }
@@ -22,15 +22,17 @@ public class OpenCallAction extends MsgAction {
     public void setPhoneCode(String phoneCode) {
         this.phoneCode = phoneCode;
     }
-    
+
     @Override
     public String getAction() {
         return "oa.open.phone";
     }
+
     @Override
     public String getHref() {
         return null;
     }
+
     @Override
     public Object getData() {
         JsonObject obj = new JsonObject();
@@ -38,5 +40,4 @@ public class OpenCallAction extends MsgAction {
         return obj;
     }
 
-    
 }

@@ -40,10 +40,10 @@ public class EventUtils {
         long pageid = ParamsUtils.getLong(params, "pageid", 0l);
         String event = ParamsUtils.getString(params, "event");
         String mac = ParamsUtils.getString(params, "mac");
-        String msgid = ParamsUtils.getString(params, "msgid","");
-        String message = ParamsUtils.getString(params, "message","");
-        String href = ParamsUtils.getString(params, "href","");
-        String thumb = ParamsUtils.getString(params, "thumb","");
+        String msgid = ParamsUtils.getString(params, "msgid", "");
+        String message = ParamsUtils.getString(params, "message", "");
+        String href = ParamsUtils.getString(params, "href", "");
+        String thumb = ParamsUtils.getString(params, "thumb", "");
         ZaloEventData data = new ZaloEventData(fromuid, phone, appid, event, pageid, oaid, msgid, message, href, thumb, mac, timestamp);
         return data;
     }

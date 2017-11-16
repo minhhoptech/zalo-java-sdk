@@ -10,18 +10,23 @@ package com.vng.zalo.sdk.oa.message;
  * @author nghiadc
  */
 public class QueryShowAction extends MsgAction {
+
     protected String data;
-    public void setData(String data){
+
+    public void setData(String data) {
         this.data = data;
     }
+
     @Override
     public String getAction() {
         return "oa.query.show";
     }
+
     @Override
     public String getHref() {
         return null;
     }
+
     @Override
     public Object getData() {
         return data;

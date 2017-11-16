@@ -13,11 +13,14 @@ import com.google.gson.JsonElement;
  * @author nghiadc
  */
 public class JsonUtils {
+
     final static Gson gson = new Gson();
-    public static String toJsonString(Object obj){
+
+    public static String toJsonString(Object obj) {
         return gson.toJson(obj);
     }
-    public static JsonElement toJsonElement(Object obj){
+
+    public static JsonElement toJsonElement(Object obj) {
         return gson.toJsonTree(obj);
     }
 }

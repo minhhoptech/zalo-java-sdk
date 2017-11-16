@@ -58,6 +58,5 @@ public class ZaloFriendsResult {
     public void setFriends(List<ZaloUser> friends) {
         this.friends = friends;
     }
-    
-    
+
 }

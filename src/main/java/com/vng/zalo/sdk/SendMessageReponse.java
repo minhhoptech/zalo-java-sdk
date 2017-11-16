@@ -10,7 +10,9 @@ package com.vng.zalo.sdk;
  * @author nghiadc
  */
 public class SendMessageReponse {
+
     String msgId;
+
     public String getMsgId() {
         return msgId;
     }
@@ -19,5 +21,5 @@ public class SendMessageReponse {
     public String toString() {
         return "SendMessageReponse{" + "msgId=" + msgId + '}';
     }
-    
+
 }

@@ -12,12 +12,13 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.StatusLine;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -37,6 +38,26 @@ import org.apache.http.util.EntityUtils;
  * @author nghiadc
  */
 public class ZaloBaseClient {
+
+    protected boolean isUseProxy = false;
+    protected static final int CONNECTION_TIMEOUT = 2000;
+    protected static final int READ_TIMEOUT = 15000;
+    protected RequestConfig config = null;
+
+    public void setIsUseProxy(boolean useProxy) {
+        this.isUseProxy = useProxy;
+    }
+
+    public void setProxy(String host, int port) {
+        this.isUseProxy = true;
+        HttpHost proxy = new HttpHost(host, port);
+        config = RequestConfig.custom().setSocketTimeout(READ_TIMEOUT + CONNECTION_TIMEOUT)
+                .setConnectTimeout(CONNECTION_TIMEOUT)
+                .setConnectionRequestTimeout(READ_TIMEOUT)
+                .setProxy(proxy)
+                .build();
+    }
+
     protected String sendHttpGetRequest(String enpointUrl, Map<String, String> params, Map<String, String> header) throws APIException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -48,11 +69,12 @@ public class ZaloBaseClient {
                         builder.addParameter(entry.getKey(), entry.getValue());
                     }
                 }
-//                System.out.println(builder.toString());
                 HttpGet httpget = new HttpGet(builder.toString());
+                if (isUseProxy) {
+                    httpget.setConfig(config);
+                }
                 if (header != null) {
                     for (Map.Entry<String, String> entry : header.entrySet()) {
-//                    httpget.addHeader("authorization", String.format("bearer %s", keyCode));
                         httpget.addHeader(entry.getKey(), entry.getValue());
                     }
                 }
@@ -68,7 +90,7 @@ public class ZaloBaseClient {
                     response.close();
                 }
             } catch (IOException ex) {
-               throw new APIException(ex);
+                throw new APIException(ex);
             } finally {
                 httpclient.close();
             }
@@ -87,6 +109,9 @@ public class ZaloBaseClient {
                     builder.addParameter(entry.getKey(), entry.getValue());
                 }
                 HttpDelete httpDelete = new HttpDelete(builder.toString());
+                if (isUseProxy) {
+                    httpDelete.setConfig(config);
+                }
                 for (Map.Entry<String, String> entry : header.entrySet()) {
                     httpDelete.addHeader(entry.getKey(), entry.getValue());
                 }
@@ -104,22 +129,23 @@ public class ZaloBaseClient {
                     response.close();
                 }
             } catch (IOException ex) {
-                 throw new APIException(ex);
+                throw new APIException(ex);
             } finally {
                 httpclient.close();
             }
         } catch (Throwable ex) {
-             throw new APIException(ex);
+            throw new APIException(ex);
         }
     }
-
-    
 
     protected String sendHttpPostRequest(String enpointUrl, Map<String, String> params, Map<String, String> header) throws APIException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             try {
                 HttpPost httpPost = new HttpPost(enpointUrl);
+                if (isUseProxy) {
+                    httpPost.setConfig(config);
+                }
                 List<NameValuePair> nvps = new ArrayList<NameValuePair>();
                 for (Map.Entry<String, String> entry : params.entrySet()) {
                     nvps.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
@@ -129,7 +155,7 @@ public class ZaloBaseClient {
                         httpPost.addHeader(entry.getKey(), entry.getValue());
                     }
                 }
-                UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(nvps,"UTF-8");
+                UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(nvps, "UTF-8");
                 httpPost.setEntity(urlEncodedFormEntity);
                 CloseableHttpResponse response = httpclient.execute(httpPost);
                 try {
@@ -139,12 +165,12 @@ public class ZaloBaseClient {
                     response.close();
                 }
             } catch (IOException ex) {
-                 throw new APIException(ex);
+                throw new APIException(ex);
             } finally {
                 httpclient.close();
             }
         } catch (APIException | IOException | ParseException ex) {
-             throw new APIException(ex);
+            throw new APIException(ex);
         }
     }
 
@@ -152,14 +178,17 @@ public class ZaloBaseClient {
         ContentType type = ContentType.create("application/json", "UTF-8");
         return ZaloBaseClient.this.sendHttpPostRequest(enpointUrl, body, header, type);
     }
-    protected String sendHttpPostRequest(String enpointUrl, String body, Map<String, String> header,ContentType type) throws APIException {
+
+    protected String sendHttpPostRequest(String enpointUrl, String body, Map<String, String> header, ContentType type) throws APIException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             try {
                 HttpPost httpPost = new HttpPost(enpointUrl);
+                if (isUseProxy) {
+                    httpPost.setConfig(config);
+                }
                 if (header != null) {
                     for (Map.Entry<String, String> entry : header.entrySet()) {
-//                    httpget.addHeader("authorization", String.format("bearer %s", keyCode));
                         httpPost.addHeader(entry.getKey(), entry.getValue());
                     }
                 }
@@ -180,7 +209,7 @@ public class ZaloBaseClient {
                 httpclient.close();
             }
         } catch (APIException | IOException | UnsupportedCharsetException | ParseException ex) {
-             throw new APIException(ex);
+            throw new APIException(ex);
         }
     }
 
@@ -190,9 +219,11 @@ public class ZaloBaseClient {
             try {
                 CloseableHttpClient httpClient = HttpClients.createDefault();
                 HttpPost uploadFile = new HttpPost(enpointUrl);
+                if (isUseProxy) {
+                    uploadFile.setConfig(config);
+                }
                 if (header != null) {
                     for (Map.Entry<String, String> entry : header.entrySet()) {
-//                    httpget.addHeader("authorization", String.format("bearer %s", keyCode));
                         uploadFile.addHeader(entry.getKey(), entry.getValue());
                     }
                 }
@@ -226,5 +257,4 @@ public class ZaloBaseClient {
             throw new APIException(ex);
         }
     }
-
 }

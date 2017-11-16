@@ -1,6 +1,5 @@
 package com.vng.zalo.sdk;
 
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 /*
@@ -8,12 +7,12 @@ import com.google.gson.annotations.SerializedName;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 /**
  *
  * @author nghiadc
  */
 public class ZaloUser {
+
     protected long userId;
     protected String displayName;
     protected int birthDate;
@@ -21,21 +20,26 @@ public class ZaloUser {
     protected int userGender;
     protected String avatar;
     protected Avatar avatars;
+
     public class Avatar {
+
         @SerializedName("120")
         protected String _120;
         @SerializedName("240")
         protected String _240;
-        
+
         public String get120() {
             return _120;
         }
+
         public void set120(String _120) {
             this._120 = _120;
         }
+
         public String get240() {
             return _240;
         }
+
         public void set240(String _240) {
             this._240 = _240;
         }

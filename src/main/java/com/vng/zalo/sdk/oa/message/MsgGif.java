@@ -10,6 +10,7 @@ package com.vng.zalo.sdk.oa.message;
  * @author cpu10142-local
  */
 public class MsgGif {
+
     String imageid;
     int width;
     int height;

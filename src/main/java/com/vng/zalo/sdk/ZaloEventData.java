@@ -10,6 +10,7 @@ package com.vng.zalo.sdk;
  * @author nghiadc
  */
 public class ZaloEventData {
+
     long fromuid;
     long phone;
     long appid;
@@ -27,7 +28,7 @@ public class ZaloEventData {
     public String toString() {
         return "ZaloEventData{" + "fromuid=" + fromuid + ", phone=" + phone + ", appid=" + appid + ", event=" + event + ", pageid=" + pageid + ", oaid=" + oaid + ", msgid=" + msgid + ", message=" + message + ", href=" + href + ", thumb=" + thumb + ", mac=" + mac + ", timestamp=" + timestamp + '}';
     }
-    
+
     public ZaloEventData(long fromuid, long phone, long appid, String event, long pageid, long oaid, String msgid, String message, String href, String thumb, String mac, long timestamp) {
         this.fromuid = fromuid;
         this.phone = phone;
@@ -42,7 +43,7 @@ public class ZaloEventData {
         this.mac = mac;
         this.timestamp = timestamp;
     }
-    
+
     public String getMsgid() {
         return msgid;
     }
@@ -74,10 +75,7 @@ public class ZaloEventData {
     public void setThumb(String thumb) {
         this.thumb = thumb;
     }
-    
 
-   
-    
     public long getFromuid() {
         return fromuid;
     }
@@ -141,6 +139,5 @@ public class ZaloEventData {
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
-    
-    
+
 }

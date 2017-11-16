@@ -10,12 +10,15 @@ package com.vng.zalo.sdk;
  * @author nghiadc
  */
 public class UploadResponse {
+
     String imageId;
+
     public String getImageId() {
         return imageId;
     }
+
     public void setImageId(String imageId) {
         this.imageId = imageId;
     }
-    
+
 }

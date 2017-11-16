@@ -17,15 +17,19 @@ public abstract class MsgAction {
     protected String title;
     protected String description;
     protected String thumb;
+
     public String getTitle() {
         return title;
     }
+
     public String getDescription() {
         return description;
     }
+
     public String getThumb() {
         return thumb;
     }
+
     public abstract String getAction();
 
     public abstract String getHref();
@@ -55,7 +59,7 @@ public abstract class MsgAction {
 
     @Override
     public String toString() {
-       return JsonUtils.toJsonString(this);
+        return JsonUtils.toJsonString(this);
     }
-    
+
 }

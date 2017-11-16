@@ -101,6 +101,7 @@ public class Zalo3rdAppClient extends ZaloBaseClient {
     }
 
     private static String POST_FEED_ENPOINT = "https://graph.zalo.me/" + APIConfig.DEFAULT_3RDAPP_API_VERSION + "/me/feed";
+
     public JsonObject postFeed(String accessToken, String message, String link) throws APIException {
         String response = "";
         try {
@@ -117,6 +118,7 @@ public class Zalo3rdAppClient extends ZaloBaseClient {
     }
 
     private static String SEND_APP_REQUEST_ENPOINT = "https://graph.zalo.me/" + APIConfig.DEFAULT_3RDAPP_API_VERSION + "/apprequests";
+
     public JsonObject sendAppRequest(String accessToken, List<Long> toUserIds, String message) throws APIException {
         String response = "";
         try {
@@ -133,6 +135,7 @@ public class Zalo3rdAppClient extends ZaloBaseClient {
     }
 
     private static String SEND_MESSAGE_ENDPOINT = "https://graph.zalo.me/" + APIConfig.DEFAULT_3RDAPP_API_VERSION + "/me/message";
+
     public JsonObject sendMessage(String accessToken, long userId, String message, String link) throws APIException {
         String response = "";
         try {

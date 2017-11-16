@@ -10,6 +10,7 @@ package com.vng.zalo.sdk.oa.message;
  * @author cpu10142-local
  */
 public class MsgStatus {
+
     int status;
 
     public int getStatus() {

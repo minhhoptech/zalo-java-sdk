@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
  * @author nghiadc
  */
 public class OpenSMSAction extends MsgAction {
+
     protected String content;
     protected String phoneCode;
 
@@ -30,15 +31,17 @@ public class OpenSMSAction extends MsgAction {
     public void setPhoneCode(String phoneCode) {
         this.phoneCode = phoneCode;
     }
-    
+
     @Override
     public String getAction() {
         return "oa.open.sms";
     }
+
     @Override
     public String getHref() {
         return null;
     }
+
     @Override
     public Object getData() {
         JsonObject obj = new JsonObject();
@@ -47,5 +50,4 @@ public class OpenSMSAction extends MsgAction {
         return obj;
     }
 
-    
 }

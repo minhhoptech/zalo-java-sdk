@@ -10,22 +10,26 @@ package com.vng.zalo.sdk.oa.message;
  * @author nghiadc
  */
 public class OpenOutAppAction extends MsgAction {
+
     protected String url;
-    public void setUrl(String url){
+
+    public void setUrl(String url) {
         this.url = url;
     }
+
     @Override
     public String getAction() {
         return "oa.open.outapp";
     }
+
     @Override
     public String getHref() {
         return null;
     }
+
     @Override
     public Object getData() {
         return url;
     }
 
-    
 }

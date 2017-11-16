@@ -5,13 +5,12 @@
  */
 package com.vng.zalo.sdk.oa.message;
 
-import com.vng.zalo.sdk.utils.JsonUtils;
-
 /**
  *
  * @author nghiadc
  */
 public class MsgLink {
+
     String link; // 	String	Url của liên kết
     String linktitle;//	String	Tiêu đề của liên kết. Tối đa 100 ký tự
     String linkdes;//	String	Mô tả của liên kết. Tối đa 500 ký tự

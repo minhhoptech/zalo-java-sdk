@@ -10,14 +10,17 @@ package com.vng.zalo.sdk;
  * @author nghiadc
  */
 public class APIException extends Exception {
+
     int code;
 
     public int getCode() {
         return code;
     }
+
     public void setCode(int code) {
         this.code = code;
     }
+
     public APIException(int code, String message) {
         super(message);
         this.code = code;
@@ -38,5 +41,5 @@ public class APIException extends Exception {
     public APIException(String message, Throwable e) {
         super(message, e);
     }
-    
+
 }

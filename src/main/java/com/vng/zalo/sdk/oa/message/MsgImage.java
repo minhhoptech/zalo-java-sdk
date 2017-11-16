@@ -5,25 +5,27 @@
  */
 package com.vng.zalo.sdk.oa.message;
 
-import com.vng.zalo.sdk.utils.JsonUtils;
-
 /**
  *
  * @author nghiadc
  */
 public class MsgImage {
-    String imageid; 
+
+    String imageid;
     String message;
 
     public String getImageid() {
         return imageid;
     }
+
     public void setImageid(String imageid) {
         this.imageid = imageid;
     }
+
     public String getMessage() {
         return message;
     }
+
     public void setMessage(String message) {
         this.message = message;
     }

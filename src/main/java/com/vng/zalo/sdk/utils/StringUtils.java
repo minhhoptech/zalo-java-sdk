@@ -34,18 +34,18 @@ public class StringUtils {
             for (int i = 0; i < collection.size(); i++) {
                 if (i == 0) {
                     result.append(collection.get(i));
-                }else{
+                } else {
                     result.append(parten).append(collection.get(i));
                 }
             }
         }
         return result.toString();
     }
-    
+
     public static void main(String[] args) {
         List<Long> ads = Arrays.asList(124124121251l, 214124125l);
         String join = join(ads, ",");
         System.out.println(join);
-        
+
     }
 }

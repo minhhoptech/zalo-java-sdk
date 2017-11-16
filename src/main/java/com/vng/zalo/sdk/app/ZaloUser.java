@@ -32,7 +32,7 @@ public class ZaloUser {
         try {
             JsonParser parser = new JsonParser();
             JsonObject data = parser.parse(response).getAsJsonObject();
-        parseProfile(data);
+            parseProfile(data);
         } catch (JsonSyntaxException | NumberFormatException e) {
             throw new APIException("Parse profile response failed: " + response);
         }
