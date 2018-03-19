@@ -48,6 +48,74 @@ public class ZaloOaClient extends ZaloBaseClient {
         this.appInfo = appInfo;
     }
 
+    public JsonObject sendFollowMessage(long phone, String templateid, JsonObject templatedata, String callbackData) throws APIException {
+        JsonObject data = new JsonObject();
+        data.addProperty("phone", phone);
+        data.addProperty("templateid", templateid);
+        data.add("templatedata", templatedata);
+        data.addProperty("callbackdata", callbackData);
+        return sendMessageRequest(EndPoint.OA_SEND_FOLLOW_MESSAGE, data.toString());
+    }
+
+    public JsonObject getSliceTag() throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_GET_SLICE_TAG, params, APIConfig.DEFAULT_HEADER);
+        return parser.parse(response).getAsJsonObject();
+    }
+
+    public JsonObject removeTag(String tagName) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        JsonObject data = new JsonObject();
+        data.addProperty("tagName", tagName);
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_REMOVE_TAG, params, APIConfig.DEFAULT_HEADER);
+        return parser.parse(response).getAsJsonObject();
+    }
+
+    public JsonObject removeUserFromTag(long uId, String tagName) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        JsonObject data = new JsonObject();
+        data.addProperty("uid", uId);
+        data.addProperty("tagName", tagName);
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_REMOVE_USER_FROM_TAG, params, APIConfig.DEFAULT_HEADER);
+        return parser.parse(response).getAsJsonObject();
+    }
+
+    public JsonObject tagUser(long uId, String tagName) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        JsonObject data = new JsonObject();
+        data.addProperty("uid", uId);
+        data.addProperty("tagName", tagName);
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_TAG_USER, params, APIConfig.DEFAULT_HEADER);
+        return parser.parse(response).getAsJsonObject();
+    }
+
     public JsonObject getProfile(long userid) throws APIException {
         Map<String, String> params = new HashMap<>();
         params.put("oaid", String.valueOf(oaInfo.getOaId()));
@@ -458,5 +526,566 @@ public class ZaloOaClient extends ZaloBaseClient {
         JsonParser parser = new JsonParser();
         String response = sendHttpGetRequest(endpoint, params, APIConfig.DEFAULT_HEADER);
         return parser.parse(response).getAsJsonObject();
+    }
+
+    public String uploadVideoArticleFromURL(String url) throws APIException {
+        try {
+            if (APIConfig.TEMPORARY_DIR == null) {
+                throw new APIException("please init temporary directory by using APIConfig.setTempDir(your_dir)");
+            }
+            String fileName = String.format("%s/%s.mp4", APIConfig.TEMPORARY_DIR, System.currentTimeMillis());
+            File file = new File(fileName);
+            FileUtils.copyURLToFile(new URL(url), file);
+            String result = uploadVideoArticle(file);
+            file.deleteOnExit();
+            return result;
+        } catch (Exception ex) {
+            throw new APIException(ex);
+        }
+    }
+
+    public String uploadVideoArticle(File video) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("videoName", video.getName());
+        data.addProperty("videoSize", video.length());
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_GET_LINK_UPLOAD, params, APIConfig.DEFAULT_HEADER);
+        JsonObject resultGetLinkUpload = parser.parse(response).getAsJsonObject();
+        int error = resultGetLinkUpload.get("errorCode").getAsInt();
+        if (error != 1) {
+            String errMsg = resultGetLinkUpload.get("errorMsg").getAsString();
+            throw new APIException(error, errMsg);
+        }
+        String uploadLink = resultGetLinkUpload.get("data").getAsJsonObject().get("uploadLink").getAsString();
+        long time = resultGetLinkUpload.get("data").getAsJsonObject().get("time").getAsLong();
+        String sig = resultGetLinkUpload.get("data").getAsJsonObject().get("sig").getAsString();
+        String appId = resultGetLinkUpload.get("data").getAsJsonObject().get("appId").getAsString();
+        // Step 2
+        params = new HashMap<>();
+        params.put("appId", appId);
+        params.put("timestamp", time + "");
+        params.put("sig", sig);
+        response = sendHttpUploadRequest(uploadLink, video, params, APIConfig.DEFAULT_HEADER);
+        JsonObject resultUpload = parser.parse(response).getAsJsonObject();
+        error = resultUpload.get("error").getAsInt();
+        if (error != 0) {
+            String errMsg = resultUpload.get("message").getAsString();
+            throw new APIException(error, errMsg);
+        }
+        String token = resultUpload.get("data").getAsJsonObject().get("token").getAsString();
+        // Step 3
+        params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        data = new JsonObject();
+        data.addProperty("token", token);
+        data.addProperty("videoName", video.getName());
+        data.addProperty("videoSize", video.length());
+        data.addProperty("time", time);
+        data.addProperty("sig", sig);
+        dataParam = data.toString();
+        params.put("data", dataParam);
+        timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        parser = new JsonParser();
+        response = sendHttpGetRequest(EndPoint.OA_ARTICLE_GET_VIDEO_ID, params, APIConfig.DEFAULT_HEADER);
+        JsonObject resultGetVideoStatus = parser.parse(response).getAsJsonObject();
+        error = resultGetVideoStatus.get("errorCode").getAsInt();
+        if (error != 1) {
+            String errMsg = resultGetVideoStatus.get("errorMsg").getAsString();
+            throw new APIException(error, errMsg);
+        }
+        String videoId = resultGetVideoStatus.get("data").getAsJsonObject().get("videoId").getAsString();
+        return videoId;
+    }
+
+    public JsonObject getArticleVideoUploadStatus(String videoId) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("videoId", videoId);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_ARTICLE_GET_VIDEO_STATUS, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        int error = result.get("errorCode").getAsInt();
+        if (error != 1) {
+            String errMsg = result.get("errorMsg").getAsString();
+            throw new APIException(error, errMsg);
+        }
+        return result;
+    }
+
+    public JsonObject createArticle(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("media", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_CREATE_ARTICLE, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceArticle(int offset, int count) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_ARTICLE_GET_SLICE, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateMediaArticle(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("media", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_UPDATE_ARTICLE, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject removeArticle(String mediaId) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("mediaid", mediaId);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), mediaId, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_UPDATE_ARTICLE, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceVideoArticle(int offset, int count) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_ARTICLE_GET_SLICE_VIDEO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateVideoArticle(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_UPDATE_VIDEO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject createVideoArticle(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("media", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_CREATE_VIDEO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getMediaId(String token) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("token", token);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), token, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_GET_MEDIA_ID, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject broadcastArticle(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_BROADCAST_MEDIA, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    // Zalo Shop api v
+    public JsonObject addVariation(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_ADD_VARIATION, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateVariation(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_VARIATION, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject multiGetAttribute(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_MULTI_GET_ATTR_INFO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceAttribute(int offset, int count) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_SLICE_ATTR, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateAttribute(String attributeId, String name) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("attributeid", attributeId);
+        data.addProperty("name", name);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_ATTR, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject createAttribute(String name, String type) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("type", type);
+        data.addProperty("name", name);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_CREATE_ATTR, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceAttributeType(int offset, int count) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_SLICE_ATTR_TYPE, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject createProduct(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_CREATE_PRODUCT, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateProduct(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        String dataParam = data.toString();
+        params.put("data", dataParam);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_PRODUCT, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject removeProduct(String productId) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("productid", productId);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), productId, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_REMOVE_PRODUCT, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getProductInfo(String productId) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("productid", productId);
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_PRODUCT_INFO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceProduct(int offset, int count) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_SLICE_PRODUCT, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject uploadProductPhoto(String fileName) throws APIException {
+        return uploadPhotoOA(fileName, EndPoint.OA_STORE_UPLOAD_PRODUCT_PHOTO);
+    }
+
+    public JsonObject uploadProductPhotoFromUrl(String url) throws APIException {
+        return uploadPhotoFromURL(url, EndPoint.OA_STORE_UPLOAD_PRODUCT_PHOTO);
+    }
+
+    public JsonObject createCategory(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_CREATE_CATEGORY, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateCategory(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_CATEGORY, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceCategory(int offset, int count) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_SLICE_CATEGORY, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject uploadCategoryPhoto(String fileName) throws APIException {
+        return uploadPhotoOA(fileName, EndPoint.OA_STORE_UPLOAD_CATEGORY_PHOTO);
+    }
+
+    public JsonObject uploadCategoryPhotoFromUrl(String url) throws APIException {
+        return uploadPhotoFromURL(url, EndPoint.OA_STORE_UPLOAD_CATEGORY_PHOTO);
+    }
+
+    public JsonObject updateOrder(JsonObject data) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_ORDER, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getSliceOrder(int offset, int count, int filter) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject data = new JsonObject();
+        data.addProperty("offset", offset);
+        data.addProperty("count", count);
+        data.addProperty("filter", filter);
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_SLICE_ORDER, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject getOrderInfo(String orderId) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        params.put("orderid", orderId);
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), orderId, timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpGetRequest(EndPoint.OA_STORE_GET_ORDER_INFO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public JsonObject updateShopInfo(int requireAddress) throws APIException {
+        Map<String, String> params = new HashMap<>();
+        params.put("oaid", String.valueOf(oaInfo.getOaId()));
+        JsonObject orderPolicy = new JsonObject();
+        orderPolicy.addProperty("requireAddress", requireAddress);
+        JsonObject data = new JsonObject();
+        data.add("orderPolicy", orderPolicy);
+        params.put("data", data.toString());
+        long timestamp = System.currentTimeMillis();
+        params.put("timestamp", String.valueOf(timestamp));
+        String mac = MacUtils.buildMac(oaInfo.getOaId(), data.toString(), timestamp, oaInfo.getSecrect());
+        params.put("mac", mac);
+        JsonParser parser = new JsonParser();
+        String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_SHOP_INFO, params, APIConfig.DEFAULT_HEADER);
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
     }
 }

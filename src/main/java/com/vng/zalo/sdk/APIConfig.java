@@ -36,8 +36,8 @@ public class APIConfig {
     public static final String DEFAULT_3RDAPP_API_VERSION = "v2.0";
     public static final String DEFAULT_OA_API_BASE = "https://openapi.zaloapp.com/oa";
     public static final String USER_AGENT = "zalosdk/1.0 Zalo Open API Java SDK";
-    public static final String SDK_VERSION = "Java 1.0";
-    public static final String SDK_SOURCE = "JavaSDK-1.0";
+    public static final String SDK_VERSION = "Java 1.1";
+    public static final String SDK_SOURCE = "JavaSDK-1.1";
     public static final Map<String, String> DEFAULT_HEADER = createDefaultHeader();
     public static String TEMPORARY_DIR = null;
 
