@@ -17,7 +17,12 @@ public abstract class MsgAction {
     protected String title;
     protected String description;
     protected String thumb;
+    protected String action;
 
+    public MsgAction() {
+        this.action = getAction();
+    }
+    
     public String getTitle() {
         return title;
     }
