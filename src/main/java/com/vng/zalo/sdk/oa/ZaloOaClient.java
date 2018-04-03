@@ -667,7 +667,7 @@ public class ZaloOaClient extends ZaloBaseClient {
         Map<String, String> params = new HashMap<>();
         params.put("oaid", String.valueOf(oaInfo.getOaId()));
         String dataParam = data.toString();
-        params.put("media", dataParam);
+        params.put("data", dataParam);
         long timestamp = System.currentTimeMillis();
         params.put("timestamp", String.valueOf(timestamp));
         String mac = MacUtils.buildMac(oaInfo.getOaId(), dataParam, timestamp, oaInfo.getSecrect());
@@ -687,7 +687,7 @@ public class ZaloOaClient extends ZaloBaseClient {
         String mac = MacUtils.buildMac(oaInfo.getOaId(), mediaId, timestamp, oaInfo.getSecrect());
         params.put("mac", mac);
         JsonParser parser = new JsonParser();
-        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_UPDATE_ARTICLE, params, APIConfig.DEFAULT_HEADER);
+        String response = sendHttpPostRequest(EndPoint.OA_ARTICLE_REMOVE_ARTICLE, params, APIConfig.DEFAULT_HEADER);
         JsonObject result = parser.parse(response).getAsJsonObject();
         return result;
     }
