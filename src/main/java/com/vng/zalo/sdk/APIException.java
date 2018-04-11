@@ -42,4 +42,7 @@ public class APIException extends Exception {
         super(message, e);
     }
 
+    public String toString() {
+        return "error: " + code + " | " + super.getMessage();
+    }
 }

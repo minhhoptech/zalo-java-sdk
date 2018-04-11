@@ -99,45 +99,6 @@ public class ZaloBaseClient {
         }
     }
 
-    protected String sendHttpDeleteRequest(String enpointUrl, Map<String, String> params, Map<String, String> header) throws APIException {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        try {
-            try {
-
-                URIBuilder builder = new URIBuilder(enpointUrl);
-                for (Map.Entry<String, String> entry : params.entrySet()) {
-                    builder.addParameter(entry.getKey(), entry.getValue());
-                }
-                HttpDelete httpDelete = new HttpDelete(builder.toString());
-                if (isUseProxy) {
-                    httpDelete.setConfig(config);
-                }
-                for (Map.Entry<String, String> entry : header.entrySet()) {
-                    httpDelete.addHeader(entry.getKey(), entry.getValue());
-                }
-                CloseableHttpResponse response = httpclient.execute(httpDelete);
-                try {
-                    HttpEntity entity = response.getEntity();
-                    String rs = EntityUtils.toString(entity);
-                    StatusLine statusLine = response.getStatusLine();
-                    int statusCode = statusLine.getStatusCode();
-                    if (statusCode != 200) {
-                        throw new Exception(String.format("Status not OK %d", statusCode));
-                    }
-                    return rs;
-                } finally {
-                    response.close();
-                }
-            } catch (IOException ex) {
-                throw new APIException(ex);
-            } finally {
-                httpclient.close();
-            }
-        } catch (Throwable ex) {
-            throw new APIException(ex);
-        }
-    }
-
     protected String sendHttpPostRequest(String enpointUrl, Map<String, String> params, Map<String, String> header) throws APIException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -170,45 +131,6 @@ public class ZaloBaseClient {
                 httpclient.close();
             }
         } catch (APIException | IOException | ParseException ex) {
-            throw new APIException(ex);
-        }
-    }
-
-    protected String sendHttpPostRequest(String enpointUrl, String body, Map<String, String> header) throws APIException {
-        ContentType type = ContentType.create("application/json", "UTF-8");
-        return ZaloBaseClient.this.sendHttpPostRequest(enpointUrl, body, header, type);
-    }
-
-    protected String sendHttpPostRequest(String enpointUrl, String body, Map<String, String> header, ContentType type) throws APIException {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        try {
-            try {
-                HttpPost httpPost = new HttpPost(enpointUrl);
-                if (isUseProxy) {
-                    httpPost.setConfig(config);
-                }
-                if (header != null) {
-                    for (Map.Entry<String, String> entry : header.entrySet()) {
-                        httpPost.addHeader(entry.getKey(), entry.getValue());
-                    }
-                }
-                StringEntity myEntity = new StringEntity(body,
-                        type);
-                httpPost.setEntity(myEntity);
-
-                CloseableHttpResponse response = httpclient.execute(httpPost);
-                try {
-                    HttpEntity entity = response.getEntity();
-                    return EntityUtils.toString(entity);
-                } finally {
-                    response.close();
-                }
-            } catch (Exception ex) {
-                throw new APIException(ex);
-            } finally {
-                httpclient.close();
-            }
-        } catch (APIException | IOException | UnsupportedCharsetException | ParseException ex) {
             throw new APIException(ex);
         }
     }

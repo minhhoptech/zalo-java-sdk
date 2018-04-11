@@ -8,6 +8,7 @@ package com.vng.zalo.sdk.oa;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.vng.zalo.sdk.APIConfig;
 import com.vng.zalo.sdk.APIException;
 import com.vng.zalo.sdk.EndPoint;
@@ -20,9 +21,12 @@ import com.vng.zalo.sdk.utils.JsonUtils;
 import com.vng.zalo.sdk.utils.MacUtils;
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -1086,6 +1090,56 @@ public class ZaloOaClient extends ZaloBaseClient {
         JsonParser parser = new JsonParser();
         String response = sendHttpPostRequest(EndPoint.OA_STORE_UPDATE_SHOP_INFO, params, APIConfig.DEFAULT_HEADER);
         JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    private static final List<String> IGNORE_FIELDS = Arrays.asList("oaid", "timestamp");
+
+    public JsonObject excuteRequest(String endPoint, String method, Map<String, Object> params) throws APIException {
+        File file = null;
+        Map<String, String> sortedMap = new TreeMap<>();
+        if (params == null) {
+            params = new HashMap<>();
+        }
+        for (Map.Entry<String, Object> entrySet : params.entrySet()) {
+            String key = entrySet.getKey();
+            Object value = entrySet.getValue();
+            if (value instanceof File) {
+                file = (File) value;
+            } else {
+                sortedMap.put(key, value.toString());
+            }
+        }
+        List<String> sequence = new ArrayList<>();
+        sequence.add((Long) params.getOrDefault("oaid", 0l) + "");
+        for (Map.Entry<String, String> entrySet : sortedMap.entrySet()) {
+            String key = entrySet.getKey();
+            String value = entrySet.getValue();
+            if (!IGNORE_FIELDS.contains(key)) {
+                sequence.add(value);
+            }
+        }
+        sequence.add((Long) params.getOrDefault("timestamp", 0l) + "");
+        sequence.add(oaInfo.getSecrect());
+        String mac = MacUtils.buildMac(sequence.toArray());
+        sortedMap.put("mac", mac);
+        String response;
+        if (file != null) {
+            response = sendHttpUploadRequest(endPoint, file, sortedMap, APIConfig.DEFAULT_HEADER);
+        } else {
+            if ("GET".equals(method.toUpperCase())) {
+                response = sendHttpGetRequest(endPoint, sortedMap, APIConfig.DEFAULT_HEADER);
+            } else {
+                response = sendHttpPostRequest(endPoint, sortedMap, APIConfig.DEFAULT_HEADER);
+            }
+        }
+        JsonObject result = null;
+        try {
+            JsonParser parser = new JsonParser();
+            result = parser.parse(response).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
+            throw new APIException("Response is not json: " + response);
+        }
         return result;
     }
 }
