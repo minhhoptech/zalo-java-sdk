@@ -44,7 +44,7 @@ public class ZaloOaClientExample {
 //            String fileUrl = "/home/cpu10142-local/Downloads/source1.gif";
 //            JsonObject ret = oaClient.uploadGifPhoto(fileUrl);
 //            System.out.println(ret);
-//            long userid = 3321115882543943283L;
+//            long userid = 3321115882543943283L;`
 //            MsgImage image = new MsgImage();
 //            image.setImageid("imageid");
 //            image.setMessage("Zalo Java SDK");
@@ -180,20 +180,21 @@ public class ZaloOaClientExample {
 //                }
 //                Thread.sleep(2000);
 //            }
+            
             //Send video
-            Map<String, Object> params = new HashMap<>();
-            params.put("oaid", oaid);
-            params.put("timestamp", System.currentTimeMillis());
-//            String endpoint = "https://openapi.zaloapp.com/oa/v1/media/getvideostatus";
-            String endpoint = "http://localhost:8115/oa/v1/sendmessage/video";
-            JsonObject data = new JsonObject();
-            String videoId = "ac17ceb6f3f31aad43e2";
-            data.addProperty("videoid", videoId);
-            data.addProperty("message", "Hello");
-            data.addProperty("uid", 26981124198689082l);
-            params.put("data", data);
-            JsonObject excuteRequest = oaClient.excuteRequest(endpoint, "POST", params);
-            System.out.println(excuteRequest);
+//            Map<String, Object> params = new HashMap<>();
+//            params.put("oaid", oaid);
+//            params.put("timestamp", System.currentTimeMillis());
+////            String endpoint = "https://openapi.zaloapp.com/oa/v1/media/getvideostatus";
+//            JsonObject data = new JsonObject();
+//            String videoId = "ac17ceb6f3f31aad43e2";
+//            data.addProperty("videoid", videoId);
+//            data.addProperty("message", "Hello");
+//            data.addProperty("uid", 26981124198689082l);
+//            params.put("data", data);
+//            JsonObject excuteRequest = oaClient.excuteRequest(endpoint, "POST", params);
+//            System.out.println(excuteRequest);
+//            
         } catch (Exception e) {
             // error 
             System.err.println("API Error message : " + e.toString());
