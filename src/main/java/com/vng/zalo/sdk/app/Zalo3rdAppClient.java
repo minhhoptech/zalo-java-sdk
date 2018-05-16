@@ -152,4 +152,18 @@ public class Zalo3rdAppClient extends ZaloBaseClient {
         }
     }
 
+    public JsonObject call(String enpoint, Map<String, String> params, String method) throws APIException {
+        String response = "";
+        try {
+            if ("POST".equals(method.toUpperCase())) {
+                response = sendHttpPostRequest(enpoint, params, APIConfig.DEFAULT_HEADER);
+            } else {
+                response = sendHttpGetRequest(enpoint, params, APIConfig.DEFAULT_HEADER);
+            }
+            JsonParser parser = new JsonParser();
+            return parser.parse(response).getAsJsonObject();
+        } catch (Exception e) {
+            throw new APIException(response);
+        }
+    }
 }

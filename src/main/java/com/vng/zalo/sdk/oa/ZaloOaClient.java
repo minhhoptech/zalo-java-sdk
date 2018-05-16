@@ -38,6 +38,7 @@ public class ZaloOaClient extends ZaloBaseClient {
     private final long MAXIMUM_FILE_SIZE = 5242880l;
     private ZaloOaInfo oaInfo;
     private ZaloAppInfo appInfo;
+    public boolean isDebug = false;
 
     public ZaloOaClient(ZaloOaInfo info) {
         this.oaInfo = info;
@@ -1127,6 +1128,9 @@ public class ZaloOaClient extends ZaloBaseClient {
         if (file != null) {
             response = sendHttpUploadRequest(endPoint, file, sortedMap, APIConfig.DEFAULT_HEADER);
         } else {
+            if (isDebug) {
+                System.out.println("DEBUG: METHOD:" + method + " | END_POINT: " + endPoint + " | PARAMS: " + sortedMap);
+            }
             if ("GET".equals(method.toUpperCase())) {
                 response = sendHttpGetRequest(endPoint, sortedMap, APIConfig.DEFAULT_HEADER);
             } else {

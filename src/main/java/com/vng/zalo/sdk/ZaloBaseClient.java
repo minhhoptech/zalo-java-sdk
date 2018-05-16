@@ -62,7 +62,6 @@ public class ZaloBaseClient {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             try {
-
                 URIBuilder builder = new URIBuilder(enpointUrl);
                 if (params != null) {
                     for (Map.Entry<String, String> entry : params.entrySet()) {

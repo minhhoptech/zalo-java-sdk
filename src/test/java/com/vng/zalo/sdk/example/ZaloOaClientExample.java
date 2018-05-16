@@ -24,7 +24,6 @@ public class ZaloOaClientExample {
         String secrect = "pIJESQgIZtK4N1noHd8t";
         ZaloOaInfo info = new ZaloOaInfo(oaid, secrect); // zalo for developer
         ZaloOaClient oaClient = new ZaloOaClient(info);
-
 //        String templateId = "2c5599bda5f84ca615e9";
         try {
 //            long userid = 3321115882543943283L;
