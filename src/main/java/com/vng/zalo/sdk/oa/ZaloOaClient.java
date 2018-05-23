@@ -1124,12 +1124,18 @@ public class ZaloOaClient extends ZaloBaseClient {
         sequence.add(oaInfo.getSecrect());
         String mac = MacUtils.buildMac(sequence.toArray());
         sortedMap.put("mac", mac);
-        String response;
+        String response = null;
         if (file != null) {
             response = sendHttpUploadRequest(endPoint, file, sortedMap, APIConfig.DEFAULT_HEADER);
         } else {
             if (isDebug) {
-                System.out.println("DEBUG: METHOD:" + method + " | END_POINT: " + endPoint + " | PARAMS: " + sortedMap);
+                StringBuilder query  = new StringBuilder();
+                for (Map.Entry<String, String> entrySet : sortedMap.entrySet()) {
+                    String key = entrySet.getKey();
+                    String value = entrySet.getValue();
+                    query.append(key).append("=").append(value).append("&");
+                }
+                System.out.println("DEBUG: METHOD:" + method + " | QUERY: " + endPoint + "?" + query.toString());
             }
             if ("GET".equals(method.toUpperCase())) {
                 response = sendHttpGetRequest(endPoint, sortedMap, APIConfig.DEFAULT_HEADER);
